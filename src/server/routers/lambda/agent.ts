@@ -1,10 +1,13 @@
 import { z } from 'zod';
 
 import { INBOX_SESSION_ID } from '@/const/session';
+import { DEFAULT_AGENT_CONFIG } from '@/const/settings';
+import { serverDB } from '@/database/server';
 import { AgentModel } from '@/database/server/models/agent';
 import { FileModel } from '@/database/server/models/file';
 import { KnowledgeBaseModel } from '@/database/server/models/knowledgeBase';
 import { SessionModel } from '@/database/server/models/session';
+import { UserModel } from '@/database/server/models/user';
 import { pino } from '@/libs/logger';
 import { authedProcedure, router } from '@/libs/trpc';
 import { KnowledgeItem, KnowledgeType } from '@/types/knowledgeBase';
@@ -14,10 +17,10 @@ const agentProcedure = authedProcedure.use(async (opts) => {
 
   return opts.next({
     ctx: {
-      agentModel: new AgentModel(ctx.userId),
-      fileModel: new FileModel(ctx.userId),
-      knowledgeBaseModel: new KnowledgeBaseModel(ctx.userId),
-      sessionModel: new SessionModel(ctx.userId),
+      agentModel: new AgentModel(serverDB, ctx.userId),
+      fileModel: new FileModel(serverDB, ctx.userId),
+      knowledgeBaseModel: new KnowledgeBaseModel(serverDB, ctx.userId),
+      sessionModel: new SessionModel(serverDB, ctx.userId),
     },
   });
 });
@@ -84,6 +87,10 @@ export const agentRouter = router({
         const item = await ctx.sessionModel.findByIdOrSlug(INBOX_SESSION_ID);
         // if there is no session for user, create one
         if (!item) {
+          // if there is no user, return default config
+          const user = await UserModel.findById(serverDB, ctx.userId);
+          if (!user) return DEFAULT_AGENT_CONFIG;
+
           const res = await ctx.sessionModel.createInbox();
           pino.info('create inbox session', res);
         }

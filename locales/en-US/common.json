@@ -9,13 +9,15 @@
       "title": "Launch {{name}}"
     }
   },
-  "appInitializing": "The application is initializing, please wait for a moment...",
+  "appInitializing": "Application is starting...",
   "autoGenerate": "Auto Generate",
   "autoGenerateTooltip": "Auto-generate assistant description based on prompts",
   "autoGenerateTooltipDisabled": "Please enter a tooltip before using the autocomplete feature",
   "back": "Back",
   "batchDelete": "Batch Delete",
   "blog": "Product Blog",
+  "branching": "Create Subtopic",
+  "branchingDisable": "The 'Subtopic' feature is only available in the server version. If you need this feature, please switch to server deployment mode or use LobeChat Cloud.",
   "cancel": "Cancel",
   "changelog": "Changelog",
   "close": "Close",
@@ -112,6 +114,7 @@
     "en": "English",
     "en-US": "English",
     "es-ES": "Spanish",
+    "fa-IR": "Persian",
     "fi-FI": "Finnish",
     "fr-FR": "French",
     "hi-IN": "Hindi",
@@ -195,8 +198,8 @@
   },
   "tab": {
     "chat": "Chat",
+    "discover": "Discover",
     "files": "Files",
-    "market": "Discover",
     "me": "Me",
     "setting": "Settings"
   },

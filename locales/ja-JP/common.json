@@ -9,13 +9,15 @@
       "title": "{{name}} を体験してみてください"
     }
   },
-  "appInitializing": "アプリケーションを初期化しています。しばらくお待ちください...",
+  "appInitializing": "アプリケーションを初期化しています...",
   "autoGenerate": "自動生成",
   "autoGenerateTooltip": "ヒントに基づいてエージェントの説明を自動生成します",
   "autoGenerateTooltipDisabled": "ツールチップを入力してから自動生成機能を使用してください",
   "back": "戻る",
   "batchDelete": "バッチ削除",
   "blog": "製品ブログ",
+  "branching": "サブトピックを作成",
+  "branchingDisable": "「サブトピック」機能はサーバー版のみで利用可能です。この機能が必要な場合は、サーバー展開モードに切り替えるか、LobeChat Cloudを使用してください。",
   "cancel": "キャンセル",
   "changelog": "変更履歴",
   "close": "閉じる",
@@ -112,6 +114,7 @@
     "en": "英語",
     "en-US": "英語",
     "es-ES": "スペイン語",
+    "fa-IR": "ペルシャ語",
     "fi-FI": "フィンランド語",
     "fr-FR": "フランス語",
     "hi-IN": "ヒンディー語",
@@ -195,8 +198,8 @@
   },
   "tab": {
     "chat": "チャット",
+    "discover": "発見",
     "files": "ファイル",
-    "market": "探す",
     "me": "私",
     "setting": "設定"
   },

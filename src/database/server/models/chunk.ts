@@ -1,8 +1,9 @@
-import { asc, cosineDistance, count, eq, inArray, sql } from 'drizzle-orm';
-import { and, desc, isNull } from 'drizzle-orm/expressions';
+import { cosineDistance, count, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNull } from 'drizzle-orm/expressions';
+import { chunk } from 'lodash-es';
 
-import { serverDB } from '@/database/server';
-import { ChunkMetadata, FileChunk, SemanticSearchChunk } from '@/types/chunk';
+import { LobeChatDatabase } from '@/database/type';
+import { ChunkMetadata, FileChunk } from '@/types/chunk';
 
 import {
   NewChunkItem,
@@ -12,17 +13,22 @@ import {
   fileChunks,
   files,
   unstructuredChunks,
-} from '../schemas/lobechat';
+} from '../../schemas';
 
 export class ChunkModel {
   private userId: string;
 
-  constructor(userId: string) {
+  private db: LobeChatDatabase;
+
+  constructor(db: LobeChatDatabase, userId: string) {
     this.userId = userId;
+    this.db = db;
   }
 
   bulkCreate = async (params: NewChunkItem[], fileId: string) => {
-    return serverDB.transaction(async (trx) => {
+    return this.db.transaction(async (trx) => {
+      if (params.length === 0) return [];
+
       const result = await trx.insert(chunks).values(params).returning();
 
       const fileChunksData = result.map((chunk) => ({ chunkId: chunk.id, fileId }));
@@ -36,15 +42,15 @@ export class ChunkModel {
   };
 
   bulkCreateUnstructuredChunks = async (params: NewUnstructuredChunkItem[]) => {
-    return serverDB.insert(unstructuredChunks).values(params);
+    return this.db.insert(unstructuredChunks).values(params);
   };
 
   delete = async (id: string) => {
-    return serverDB.delete(chunks).where(and(eq(chunks.id, id), eq(chunks.userId, this.userId)));
+    return this.db.delete(chunks).where(and(eq(chunks.id, id), eq(chunks.userId, this.userId)));
   };
 
   deleteOrphanChunks = async () => {
-    const orphanedChunks = await serverDB
+    const orphanedChunks = await this.db
       .select({ chunkId: chunks.id })
       .from(chunks)
       .leftJoin(fileChunks, eq(chunks.id, fileChunks.chunkId))
@@ -53,17 +59,25 @@ export class ChunkModel {
     const ids = orphanedChunks.map((chunk) => chunk.chunkId);
     if (ids.length === 0) return;
 
-    await serverDB.delete(chunks).where(inArray(chunks.id, ids));
+    const list = chunk(ids, 500);
+
+    await this.db.transaction(async (trx) => {
+      await Promise.all(
+        list.map(async (chunkIds) => {
+          await trx.delete(chunks).where(inArray(chunks.id, chunkIds));
+        }),
+      );
+    });
   };
 
   findById = async (id: string) => {
-    return serverDB.query.chunks.findFirst({
+    return this.db.query.chunks.findFirst({
       where: and(eq(chunks.id, id)),
     });
   };
 
   async findByFileId(id: string, page = 0) {
-    const data = await serverDB
+    const data = await this.db
       .select({
         abstract: chunks.abstract,
         createdAt: chunks.createdAt,
@@ -89,7 +103,7 @@ export class ChunkModel {
   }
 
   async getChunksTextByFileId(id: string): Promise<{ id: string; text: string }[]> {
-    const data = await serverDB
+    const data = await this.db
       .select()
       .from(chunks)
       .innerJoin(fileChunks, eq(chunks.id, fileChunks.chunkId))
@@ -104,7 +118,7 @@ export class ChunkModel {
   async countByFileIds(ids: string[]) {
     if (ids.length === 0) return [];
 
-    return serverDB
+    return this.db
       .select({
         count: count(fileChunks.chunkId),
         id: fileChunks.fileId,
@@ -115,7 +129,7 @@ export class ChunkModel {
   }
 
   async countByFileId(ids: string) {
-    const data = await serverDB
+    const data = await this.db
       .select({
         count: count(fileChunks.chunkId),
         id: fileChunks.fileId,
@@ -137,8 +151,10 @@ export class ChunkModel {
   }) {
     const similarity = sql<number>`1 - (${cosineDistance(embeddings.embeddings, embedding)})`;
 
-    const data = await serverDB
+    const data = await this.db
       .select({
+        fileId: fileChunks.fileId,
+        fileName: files.name,
         id: chunks.id,
         index: chunks.index,
         metadata: chunks.metadata,
@@ -149,16 +165,15 @@ export class ChunkModel {
       .from(chunks)
       .leftJoin(embeddings, eq(chunks.id, embeddings.chunkId))
       .leftJoin(fileChunks, eq(chunks.id, fileChunks.chunkId))
+      .leftJoin(files, eq(fileChunks.fileId, files.id))
       .where(fileIds ? inArray(fileChunks.fileId, fileIds) : undefined)
       .orderBy((t) => desc(t.similarity))
       .limit(30);
 
-    return data.map(
-      (item): SemanticSearchChunk => ({
-        ...item,
-        metadata: item.metadata as ChunkMetadata,
-      }),
-    );
+    return data.map((item) => ({
+      ...item,
+      metadata: item.metadata as ChunkMetadata,
+    }));
   }
 
   async semanticSearchForChat({
@@ -171,10 +186,14 @@ export class ChunkModel {
   }) {
     const similarity = sql<number>`1 - (${cosineDistance(embeddings.embeddings, embedding)})`;
 
-    const result = await serverDB
+    const hasFiles = fileIds && fileIds.length > 0;
+
+    if (!hasFiles) return [];
+
+    const result = await this.db
       .select({
         fileId: files.id,
-        filename: files.name,
+        fileName: files.name,
         id: chunks.id,
         index: chunks.index,
         metadata: chunks.metadata,
@@ -186,12 +205,14 @@ export class ChunkModel {
       .leftJoin(embeddings, eq(chunks.id, embeddings.chunkId))
       .leftJoin(fileChunks, eq(chunks.id, fileChunks.chunkId))
       .leftJoin(files, eq(files.id, fileChunks.fileId))
-      .where(and(fileIds && fileIds.length > 0 ? inArray(fileChunks.fileId, fileIds) : undefined))
+      .where(inArray(fileChunks.fileId, fileIds))
       .orderBy((t) => desc(t.similarity))
       .limit(5);
 
     return result.map((item) => {
       return {
+        fileId: item.fileId,
+        fileName: item.fileName,
         id: item.id,
         index: item.index,
         similarity: item.similarity,

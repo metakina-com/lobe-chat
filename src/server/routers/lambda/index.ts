@@ -5,14 +5,15 @@ import { publicProcedure, router } from '@/libs/trpc';
 
 import { agentRouter } from './agent';
 import { chunkRouter } from './chunk';
-// router that connect to db
 import { fileRouter } from './file';
 import { importerRouter } from './importer';
 import { knowledgeBaseRouter } from './knowledgeBase';
 import { messageRouter } from './message';
 import { pluginRouter } from './plugin';
+import { ragEvalRouter } from './ragEval';
 import { sessionRouter } from './session';
 import { sessionGroupRouter } from './sessionGroup';
+import { threadRouter } from './thread';
 import { topicRouter } from './topic';
 import { userRouter } from './user';
 
@@ -25,8 +26,10 @@ export const lambdaRouter = router({
   knowledgeBase: knowledgeBaseRouter,
   message: messageRouter,
   plugin: pluginRouter,
+  ragEval: ragEvalRouter,
   session: sessionRouter,
   sessionGroup: sessionGroupRouter,
+  thread: threadRouter,
   topic: topicRouter,
   user: userRouter,
 });

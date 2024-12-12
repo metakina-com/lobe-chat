@@ -1,12 +1,18 @@
 import { useMemo } from 'react';
 
 import {
+  Ai21ProviderCard,
   Ai360ProviderCard,
   AnthropicProviderCard,
   BaichuanProviderCard,
   DeepSeekProviderCard,
+  FireworksAIProviderCard,
+  GiteeAIProviderCard,
   GoogleProviderCard,
   GroqProviderCard,
+  HigressProviderCard,
+  HunyuanProviderCard,
+  InternLMProviderCard,
   MinimaxProviderCard,
   MistralProviderCard,
   MoonshotProviderCard,
@@ -15,9 +21,12 @@ import {
   PerplexityProviderCard,
   QwenProviderCard,
   SiliconCloudProviderCard,
+  SparkProviderCard,
   StepfunProviderCard,
   TaichuProviderCard,
   TogetherAIProviderCard,
+  UpstageProviderCard,
+  XAIProviderCard,
   ZeroOneProviderCard,
   ZhiPuProviderCard,
 } from '@/config/modelProviders';
@@ -25,41 +34,75 @@ import {
 import { ProviderItem } from '../type';
 import { useAzureProvider } from './Azure';
 import { useBedrockProvider } from './Bedrock';
+import { useCloudflareProvider } from './Cloudflare';
+import { useGithubProvider } from './Github';
+import { useHuggingFaceProvider } from './HuggingFace';
 import { useOllamaProvider } from './Ollama';
 import { useOpenAIProvider } from './OpenAI';
+import { useSenseNovaProvider } from './SenseNova';
+import { useWenxinProvider } from './Wenxin';
 
 export const useProviderList = (): ProviderItem[] => {
   const AzureProvider = useAzureProvider();
   const OllamaProvider = useOllamaProvider();
   const OpenAIProvider = useOpenAIProvider();
   const BedrockProvider = useBedrockProvider();
+  const CloudflareProvider = useCloudflareProvider();
+  const GithubProvider = useGithubProvider();
+  const HuggingFaceProvider = useHuggingFaceProvider();
+  const WenxinProvider = useWenxinProvider();
+  const SenseNovaProvider = useSenseNovaProvider();
 
   return useMemo(
     () => [
       OpenAIProvider,
-      OllamaProvider,
       AzureProvider,
-      GoogleProviderCard,
+      OllamaProvider,
       AnthropicProviderCard,
       BedrockProvider,
-      GroqProviderCard,
+      GoogleProviderCard,
+      DeepSeekProviderCard,
+      HuggingFaceProvider,
       OpenRouterProviderCard,
+      CloudflareProvider,
+      GithubProvider,
       NovitaProviderCard,
       TogetherAIProviderCard,
-      QwenProviderCard,
-      DeepSeekProviderCard,
-      MinimaxProviderCard,
-      MistralProviderCard,
-      MoonshotProviderCard,
+      FireworksAIProviderCard,
+      GroqProviderCard,
       PerplexityProviderCard,
+      MistralProviderCard,
+      Ai21ProviderCard,
+      UpstageProviderCard,
+      XAIProviderCard,
+      QwenProviderCard,
+      WenxinProvider,
+      HunyuanProviderCard,
+      SparkProviderCard,
       ZhiPuProviderCard,
       ZeroOneProviderCard,
+      SenseNovaProvider,
       StepfunProviderCard,
+      MoonshotProviderCard,
       BaichuanProviderCard,
-      TaichuProviderCard,
+      MinimaxProviderCard,
       Ai360ProviderCard,
+      TaichuProviderCard,
+      InternLMProviderCard,
       SiliconCloudProviderCard,
+      HigressProviderCard,
+      GiteeAIProviderCard,
     ],
-    [AzureProvider, OllamaProvider, OpenAIProvider, BedrockProvider],
+    [
+      AzureProvider,
+      OllamaProvider,
+      OpenAIProvider,
+      BedrockProvider,
+      CloudflareProvider,
+      GithubProvider,
+      WenxinProvider,
+      HuggingFaceProvider,
+      SenseNovaProvider,
+    ],
   );
 };
